@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>My first three.js app</title>
+	
+	</head>
+	<body>
+		<link rel="stylesheet" href="css/main.css">
+
+		<div class="tabs" id="tabs">
+			<div id="toolbar" class="tabs_button">
+				<button class="Button" id="Add" data-for-tab="1"><img title="Add" src="images/plus-circle.svg"></button>
+				<button class="Button" id="Delete" data-for-tab="2"><img title="Delete" src="images/trash3.svg"></button>
+				<button class="Button" id="Safe" data-for-tab="3"><img title="Safe" src="images/cart2.svg"></button>
+			</div>
+			<div class="tabs_content" id="test1" data-tab="1"> 
+				<img title="ground" id="ground" src="assets/ground.PNG" />
+				<img title="pillarBig" id="pillarBig" src="assets/pillarBig.PNG"  />
+				<img title="pillarHalf" id="pillarHalf" src="assets/pillarHalf.PNG" />
+				<img title="planeSmall" id="planeSmall" src="assets/planeSmall.PNG" />
+				<img title="box" id="box" src="assets/box.PNG" />	
+			</div>
+		</div>
+
+		<script type="module">
+			import * as THREE from 'https://unpkg.com/three@0.126.1/build/three.module.js';
+			import { OrbitControls } from 'https://unpkg.com/three@0.126.1/examples/jsm/controls/OrbitControls.js';
+			import { GLTFLoader } from 'https://unpkg.com/three@0.126.1/examples/jsm/loaders/GLTFLoader.js';
+			
+		
+			function setupTabs() {
+				document.querySelectorAll('.Button').forEach(button => {
+				
+					const toolbar = button.parentElement;
+					const allTabs = toolbar.parentElement;
+					const tabNumber = button.dataset.forTab;
+					const tabToActivate = document.getElementById('test1');
+					
+					if(tabNumber == 1){
+						button.addEventListener('click', (e) => {
+							if(tabToActivate.classList.contains('tabs_content--active')){
+								document.getElementById('test1').classList.remove('tabs_content--active');
+							} else {
+								tabToActivate.classList.add('tabs_content--active');
+							}
+						});
+					}
+					if(tabNumber == 2){
+						button.addEventListener('click', () => {
+							removeEntity(lastId);
+						});
+					}
+					if(tabNumber == 3){
+						button.addEventListener('click', () => {
+							getSceneObjectNames();
+							
+						});
+					}
+
+					
+				});
+			}
+			
+			setupTabs();
+
+
+			//create scene -----------
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera(
+				75,
+				window.innerWidth / window.innerHeight,
+				0.01,
+				1000
+			);
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			document.body.appendChild( renderer.domElement );
+
+
+			//OrbitControls ---------
+			const controls = new OrbitControls(camera, renderer.domElement);
+
+			controls.maxDistance = 15;
+			controls.minDistance = 1;
+			controls.enablePan = false;
+
+			//controls.minAzimuthAngle = Math.PI /16;
+			//controls.maxAzimuthAngle = Math.PI /2;
+
+			controls.minPolarAngle = Math.PI /10;
+			controls.maxPolarAngle = Math.PI /2;
+
+
+			
+
+			
+		
+			const material = new THREE.MeshPhongMaterial({
+				color: 0x808080,
+				flatShading: true,
+			});
+
+
+			//GLTF Loader ------------
+			
+			document.getElementById('ground').addEventListener('click', () => {
+				loadGLTF('ground');
+				document.getElementById('test1').classList.remove('tabs_content--active');
+			})
+			document.getElementById('pillarBig').addEventListener('click', () => {
+				loadGLTF('pillarBig');
+				document.getElementById('test1').classList.remove('tabs_content--active');
+			})
+			document.getElementById('pillarHalf').addEventListener('click', () => {
+				loadGLTF('pillarHalf');
+				document.getElementById('test1').classList.remove('tabs_content--active');
+			})
+			document.getElementById('planeSmall').addEventListener('click', () => {
+				loadGLTF('planeSmall');
+				document.getElementById('test1').classList.remove('tabs_content--active');
+			})
+			document.getElementById('box').addEventListener('click', () => {
+				loadGLTF('box');
+				document.getElementById('test1').classList.remove('tabs_content--active');
+			})
+
+			var groundCount = 1;
+
+			function loadGLTF(id){
+				const loader = new GLTFLoader();
+				var objects = scene.children;
+
+				if(objects.length < 20) {
+					
+					loader.load('assets/'+id+'.gltf', function(gltf) {
+
+						const model = gltf.scene;
+
+						model.traverse( function( child ) {
+							if ( child.isMesh ) {
+								child.material = material;
+								
+								if (id == 'ground'){
+									child.position.x = 0.25;
+									child.position.z = 0.25;
+
+										
+									child.userData.draggable = false;
+									child.userData.name = id;
+									child.userData.inc = 0;
+									child.userData.count = groundCount;
+
+								} else {
+									child.position.x = 0;
+									child.position.z = 0;
+
+										
+									child.userData.draggable = true;
+									child.userData.name = id;
+									child.userData.inc = 0;
+								}
+
+								if(objects.length > 2){
+									if(id == 'ground'){
+										if(child.userData.count == 1){
+											child.position.x = -1.75;
+											console.log("2");
+										} else if(child.userData.count == 2) {
+											child.position.x = 2.25;
+											console.log("3");
+										} else {
+											alert("Max Anzahl an Böden erreicht.");
+										}
+										groundCount += 1;
+									} else {
+										child.position.x = 0;
+										child.position.z = 1.75;
+									}
+								} 
+
+								createBB(child, child.id);
+
+								scene.add(child);
+
+								console.log(scene.children);
+							}
+						});
+					});
+				} else {
+					alert("Max Anzahl an Bauelementen erreicht.");
+				}
+			}
+	
+
+			//creating Bounding Boxes -----------
+			var boundingBoxes = [];
+
+			function createBB(child, childId) {
+				let newBB = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+				
+				newBB.setFromObject(child);
+				
+				boundingBoxes[childId] = newBB;
+			}
+
+
+			function updateBoundingBoxes() {
+				for(var i = 0 ; i < scene.children.length; i++){
+					const cObj = scene.children[i];
+					
+					if(cObj.isMesh && (!cObj.userData.ground)){
+						boundingBoxes[cObj.id].copy(cObj.geometry.boundingBox).applyMatrix4(cObj.matrixWorld);
+					} else {
+						continue;
+					}
+
+				}
+			}
+
+
+
+			//add to scene --------
+			scene.background = new THREE.Color(0xffffff);
+			var light = new THREE.HemisphereLight(0xffffff, 0x000000, 1);
+			scene.add(light);
+			camera.position.set(20, 10, 20);
+
+
+			//GridHelper ----------
+			/* const grid = new THREE.GridHelper(15, 30, 0x005eff);
+			grid.userData.draggable = false;
+			grid.userData.name = 'floor';
+			grid.userData.ground = true;
+			scene.add(grid);
+
+			console.log(grid);
+			console.log(scene.children); */
+
+
+			function createFloor() {
+				let blockPlane = new THREE.Mesh(new THREE.BoxBufferGeometry(), new THREE.MeshPhongMaterial({color: 0xffff66}));
+				
+				/* const blockPlane = new THREE.Mesh(
+					new THREE.BoxGeometry(15, 2, 15),
+					new THREE.MeshPhongMaterial({
+						side: THREE.DoubleSide,
+						color: 0xffff66,
+						visible: true,
+					})
+				); */
+				
+				blockPlane.position.set(0, -1, 0);
+				blockPlane.scale.set(15, 2, 15);
+
+				blockPlane.userData.draggable = false;
+				blockPlane.userData.name = 'floor';
+
+				blockPlane.userData.ground = true;
+
+				scene.add(blockPlane);
+
+			};
+
+			createFloor();
+
+			/* function createWall() {
+				let pos = {x:0, y: -1, z:-5};
+				let scale = {x: 15, y: 2, z:15};
+
+				let blockPlane = new THREE.Mesh(new THREE.BoxBufferGeometry(), new THREE.MeshPhongMaterial({color: 0xffff66}));
+				blockPlane.position.set(pos.x, pos.y, pos.z);
+				blockPlane.scale.set(scale.x, scale.y, scale.z);
+				blockPlane.rotation.x = Math.PI / 2;
+				scene.add(blockPlane);
+
+				blockPlane.userData.draggable = false;
+				blockPlane.userData.name = 'wall';
+
+				blockPlane.userData.ground = true;
+			}
+
+			createWall(); */
+			
+
+			//raycaster------
+			const raycaster = new THREE.Raycaster();
+			const clickMouse = new THREE.Vector2();
+			const moveMouse = new THREE.Vector2();
+			var draggable;
+			var lastId;
+
+			window.addEventListener('click', event => {
+				if (draggable){
+					//console.log('dropping the ' + draggable.userData.name + ' ' + draggable.id);
+					lastId = draggable.id;
+					draggable = null;
+					return;
+				}
+
+				clickMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+				clickMouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+				raycaster.setFromCamera(clickMouse, camera);
+				const found = raycaster.intersectObjects(scene.children);
+				if (found.length > 0 && found[0].object.userData.draggable){
+					draggable = found[0].object;
+					//console.log('found draggable ' + draggable.userData.name);
+				}
+			});
+
+			document.onkeydown = function (e) {
+				var objects = scene.children;
+
+				if (e.keyCode === 40) {
+					
+					if(lastId != 0){
+						for(var i=0; i < objects.length; i++){
+							var o = objects[i];
+
+							if(o.isMesh && (o.id == lastId)){
+								if((boundingBoxes[o.id].max.y-boundingBoxes[o.id].min.y)/2 <= o.position.y){
+									o.position.y -= 0.25;
+								} else {
+									o.position.y = (boundingBoxes[o.id].max.y-boundingBoxes[o.id].min.y)/2;
+								}
+				
+							} else {
+								continue;
+							}
+						}
+					}
+				}
+
+				if (e.keyCode === 38) {
+					
+					if(lastId != 0){
+						for(var i=0; i < objects.length; i++){
+							var o = objects[i];
+
+							if(o.isMesh && (o.id == lastId)){
+								o.position.y += 0.25;
+							} else {
+								continue;
+							}
+						}
+					}
+				}
+
+			}
+
+			window.addEventListener('mousemove', event => {
+				moveMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+				moveMouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+			});
+
+			function dragObject(){
+				if(draggable != null){
+					updateBoundingBoxes();
+
+					raycaster.setFromCamera(moveMouse, camera);
+					const found = raycaster.intersectObjects(scene.children);
+					if(found.length > 0){
+						for(var i = 0; i < found.length; i++){
+							var intersect = found[i];
+							
+							if(!intersect.object.userData.ground){
+								continue;
+							}
+							
+							const snapPos = new THREE.Vector3().copy(intersect.point).floor();
+						
+							/* if(intersect.object.userData.name == 'ground'){
+								snapPos.addScalar(0.25, 0, 0.25);
+								console.log(intersect.object.userData.name);
+							}  */
+
+							snapPos.addScalar(0.75, 0, 0.75);
+							console.log(intersect.object.userData.name);
+
+							draggable.position.x = snapPos.x;
+							draggable.position.z = snapPos.z;
+								
+							checkCollisions(draggable);
+						}
+					}
+					
+					/* found.forEach(function(intersect){
+						
+
+						const snapPos = new THREE.Vector3().copy(intersect.point).floor();
+						
+						if(intersect.object.userData.name === 'ground' || 'planeSmall' || 'box'){
+							snapPos.addScalar(0.5, 0, 0.5);
+							console.log(intersect.object.userData.name);
+						} else {
+							snapPos.addScalar(0.25, 0, 0.25);
+						}
+
+						draggable.position.x = snapPos.x;
+						draggable.position.z = snapPos.z;
+							
+						checkCollisions(draggable);
+					}) */
+				}
+			} 
+
+
+			function checkCollisions(draggable) {
+				
+				for(var i = 0 ; i < scene.children.length; i++){
+					const cObj = scene.children[i];
+					
+					if(cObj.isMesh && (!cObj.userData.ground) && (cObj != draggable)){
+						if(boundingBoxes[draggable.id].intersectsBox(boundingBoxes[cObj.id])){
+
+							var increment = boundingBoxes[cObj.id].max.y + (boundingBoxes[draggable.id].max.y - boundingBoxes[draggable.id].min.y)/2;
+														
+							draggable.position.y = increment
+							draggable.userData.inc = increment;
+
+
+
+						} else {
+							
+							/* draggable.position.y -= draggable.userData.inc;
+							draggable.userData.inc = 0; */
+
+						}
+					} else {
+						continue;
+					}
+
+					//1. on right click, lower object
+					//2. check beneath object for other objects
+					//3. set frame timer delay
+					
+				}
+			}
+
+
+			function getSceneObjectNames() {
+				var objects = scene.children;
+
+				if(objects.length > 2){
+					for(var i=0; i < objects.length; i++){
+						var o = objects[i];
+
+						if(o.isMesh && (!o.userData.ground)){
+							console.log(o.userData.name);
+						} else {
+							continue;
+						}
+					}
+				}
+			}
+
+
+			//resize window----------
+			window.addEventListener('resize', onWindowResize, false)
+			function onWindowResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+			}
+
+
+			function animate() {
+				controls.update();
+
+				dragObject();
+	
+				renderer.render(scene, camera);
+				requestAnimationFrame(animate);
+
+			}
+
+			function removeEntity(lastId) {
+
+				var objects = scene.children;
+
+				if(lastId != 0){
+					for(var i=0; i < objects.length; i++){
+						var o = objects[i];
+
+						if(o.isMesh && (o.id == lastId)){
+							scene.remove(o);
+						} else {
+							continue;
+						}
+					}
+				}
+			}
+
+
+			animate();
+		</script>
+	</body> 
+</html>

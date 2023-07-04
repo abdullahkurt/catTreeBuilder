@@ -1,0 +1,126 @@
+:root {
+	color-scheme: light dark;
+}
+
+body {
+	font-family: Helvetica, Arial, sans-serif;
+	font-size: 14px;
+	margin: 0;
+	overflow: hidden;
+}
+
+/* 
+button {
+	position: relative;
+}
+
+.tabs {
+	display : flex;
+}
+
+
+button {
+	color: #555;
+	background-color: #ddd;
+	border: 0px;
+	margin: 0px; 
+	padding: 5px 8px;
+	font-size: 12px;
+	text-transform: uppercase;
+	cursor: pointer;
+	outline: none;
+}
+
+	button:hover {
+		background-color: #fff;
+	}
+
+	button.selected {
+		background-color: #fff;
+	}
+
+
+#toolbar {
+	position: absolute;
+	left: 10px;
+	top: 42px;
+	width: 32px;
+	background: #eee;
+	text-align: center;
+}
+
+	#toolbar button, #toolbar input {
+		height: 32px;
+	}
+
+		#toolbar button img {
+			width: 16px;
+			opacity: 0.5;
+		}
+
+.Panel {
+	color: #888;
+}
+ */
+
+.tabs {
+	display: flex;
+	position: absolute;
+	left: 10px;
+	top: 42px;
+	right: 280px;
+}
+
+.tabs_content {
+	background: #eee;
+	margin-left: 20px;
+	display: none;
+}
+
+	.tabs_content img {
+		width: 100px;
+		height: 100px;
+		padding: 20px;
+	}
+
+#toolbar button, #toolbar input {
+	height: 32px;
+}
+
+	#toolbar button img {
+		width: 16px;
+		opacity: 0.5;
+	}
+
+
+
+button {
+	display: block;
+	color: #555;
+	background-color: #ddd;
+	border: 0px;
+	margin: 0px; 
+	padding: 5px 8px;
+	font-size: 12px;
+	text-transform: uppercase;
+	cursor: pointer;
+	outline: none;
+	flex-shrink: 0;
+}
+
+	button:hover {
+		background-color: #fff;
+	}
+
+	button.selected {
+		background-color: #fff;
+	}
+
+
+/* .tabs_button--active {
+
+} */
+
+.tabs_content--active {
+	display: block;
+}
